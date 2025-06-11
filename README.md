@@ -1,5 +1,6 @@
 # VulkanCourse
-The Vulkan Course repo
+
+> The Udemy Vulkan Course repo
 
 ## Setup
 
