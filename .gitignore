@@ -53,3 +53,5 @@
 */dataSources.local.xml
 
 *.vs/
+
+*.pdf
