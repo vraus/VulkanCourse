@@ -1,3 +1,5 @@
+// ReSharper disable CppClangTidyClangDiagnosticUnusedMacros
+
 // std
 #include <iostream>
 
