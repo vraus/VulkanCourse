@@ -26,7 +26,28 @@
 *.a
 *.lib
 
+*.tlog
+*.idb
+*.pdb
+*.ilk
+*.recipe
+*.idea/
+
 # Executables
 *.exe
 *.out
 *.app
+
+# Default ignored files
+*/shelf/
+*/workspace.xml
+
+*/modules.xml
+*/contentModel.xml
+*/projectSettingsUpdater.xml
+*/.idea.VulkanCourse.iml
+
+*/httpRequests/
+
+*/dataSources/
+*/dataSources.local.xml
