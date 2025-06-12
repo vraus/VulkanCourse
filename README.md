@@ -139,7 +139,6 @@ The project needs the following to be installed in order to work properly:
 + 🚨 **`VK_PRESENT_MODE_IMMEDIATE_KHR`**
     + In this mode, the surface image will be replaced *immediately* after the next image to be displayed has finished rendering.
     + This can be an issue! Our Surface may only be halfway through drawing to the screen when we replace it, causing the second half to be a different image. This results in tearing.
-        ![alt text](images/tearing.png)
 + 🚨 **`VK_PRESENT_MODE_FIFO_RELAXED_KHR`**
     + This mode works the same as FIFO mode, except for the situation where there are no images on the queue during a Vertical Blank.
     + If the presnetaiton queue is empty during a Vertical Blank it will start acting like Immediat mode.
@@ -149,12 +148,10 @@ The project needs the following to be installed in order to work properly:
     + **Triple Buffer**
     + Images ready to present are added to a queue of size 1. The Surface uses this image only at a Vertical Blank to avoir tearing.
     + If a new image is sent to the queue to be presented, whatever is currently in the queue is discarded and becomes a vacant image ready to be drawn again.        
-        ![alt text](images/mailbox_diagram.png)
 + ✅ **`VK_PRESENT_MODE_FIFO_KHR`**
     + Images ready to present are added to a queue of a certain size. They are removed one at a time at each Vertical Blank, so there is no tearing.
     + Is a new image is sent to the queue to be presented, but the queue is full, the program will wait until it can add the image.
     + If the queue is empty when the next Vertical Blank occurs, it will redraw the image currently heald and check again at the next Vertical Blank.
-    ![alt text](images/fifo_diagram.png)
 
 #### Surface
 
