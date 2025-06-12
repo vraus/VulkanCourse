@@ -100,3 +100,82 @@ The project needs the following to be installed in order to work properly:
 + Layers are similar to extensions and are not built-in to the core Vulkan code. Must be acquired from third parties.
 + Additionally, the reporting of validation errors is not a core Vulkan functions and will require another extension to be applied.
 + Note: Before Vulkan 1.1, validation layers could be specified separately for an Instance and a Logical Device. This is no longer the case, now the Instance validation layers cover both.
+
+## Surfaces, Swapchains and ImageViews
+
+### More Extensions !
+
++ As mentioned previously: Displaying images to a window is not native to Vulkan. Requires extensions.
++ This also includes swapping out images like in a Double/Triple Buffer.
+    + This means the common method of drawing to one image while another is displayed, and the swapping them at an appropriate time to display the updated image.
++ To do this we need two things:
+    + **[Swapchain](#the-swapchain)**: Complex object that handles retrieval and updating of images being displayed, or yet to be.
+    +  **[Surface](#surface)**: An interface between the window and an image in the swapchain.
+
+#### The Swapchain 
+
++ Another extension. Will need to be checked for compatibility.
++ The swapchain is a group of images that can be drawn to and presented
++ The object is set up so it can be queried to get a new image to be drawn to and then presented. 
++ This requires a lot of synchronisation... Which we will cover in a later video!
++ The Swapchain has a few parts that need to be setup
+
+##### Creating the Swapchain
+
++ A Swapchain has 3 major parts:
+    + **Surface Capabilites**: What the surface is capable of handling
+    + **Surface Format**: The format of the surface the Swapchain will presnet to (e.g. RGB)
+    + **[Presentation Mode](#presentation-mode)**: The order and timing of images being presented to the surface
++ The settings are based on the Surface. We query the Surface for these parts to ensure compatibility.
+
+##### Presentation Mode
+
++ Presentation Modes are the order and timing of images being presented to the Surface.
++ There are 4 modes and 2 are often considered undesirable due to the risk of tearing.
++ At any one time there will be **one image** present at the Surface that is being drawn to the screen. ***(Not 0, Not 2, 1)***.
++ First, Some information about how monitors work:
+    + Monitors draw starting at the top-left pixel, and then drawing to the screen row-by-row.
+    + When the image completes, the screen is then cleared to start drawing again, the period of time AFTER this clear and BEFORE it starts drawing again, is known as a "Vertical Blank Interval". This is usually the best tme to replace the Surface image.
++ 🚨 **`VK_PRESENT_MODE_IMMEDIATE_KHR`**
+    + In this mode, the surface image will be replaced *immediately* after the next image to be displayed has finished rendering.
+    + This can be an issue! Our Surface may only be halfway through drawing to the screen when we replace it, causing the second half to be a different image. This results in tearing.
+        ![alt text](images/tearing.png)
++ 🚨 **`VK_PRESENT_MODE_FIFO_RELAXED_KHR`**
+    + This mode works the same as FIFO mode, except for the situation where there are no images on the queue during a Vertical Blank.
+    + If the presnetaiton queue is empty during a Vertical Blank it will start acting like Immediat mode.
+    + The next image placed on to the presentation queue will no longer wait for a Vertical Blank. It will instead be passed straight to the surface, like in Immediat mode. This will cause tearing.
+    + After it returns to FIFO
++ ✅ **`VK_PRESENT_MODE_MAILBOX_KHR`**
+    + **Triple Buffer**
+    + Images ready to present are added to a queue of size 1. The Surface uses this image only at a Vertical Blank to avoir tearing.
+    + If a new image is sent to the queue to be presented, whatever is currently in the queue is discarded and becomes a vacant image ready to be drawn again.        
+        ![alt text](images/mailbox_diagram.png)
++ ✅ **`VK_PRESENT_MODE_FIFO_KHR`**
+    + Images ready to present are added to a queue of a certain size. They are removed one at a time at each Vertical Blank, so there is no tearing.
+    + Is a new image is sent to the queue to be presented, but the queue is full, the program will wait until it can add the image.
+    + If the queue is empty when the next Vertical Blank occurs, it will redraw the image currently heald and check again at the next Vertical Blank.
+    ![alt text](images/fifo_diagram.png)
+
+#### Surface
+
++ Will act as an interface between the window created by GLFW and a Vulkan defined image in the Swapchain.
++ Surface will need to be created specifically for the window of the system we're using.
++ Could define this manually, but would make things complex when going cross-platform!
++ Fortunately, GLFW has a built-in function that returns an adequate surface for the current system being used.
+    + `glfwCreateSurface();`
+
+#### The "Presentation Queue"
+
++ In order to present a new Swapchain image to our surface, we need a queue that can handle present operations.
++ This is not really a type of queue, but a feature that some have.
++ Graphics queues usually have the required feature.
++ This means our Graphics queue and Presentation queue will usually be the same queue !
+
+#### Images and Image Views
+
++ When the Swapchain is created, it will automatically create a set of imaes to be used by the Swapchain.
++ Since we will be drawing to them, we need access to them. To do this, the Swapchain can be querid and an array of the images can be returned. 
++ However these images can't be used directly since they are just the raw image.
++ An "ImageView" type can be created to interface with an image.
++ An ImageView simply describes how to read an image (e.g. 2D or 3D addresses, format, etc...) and what part of the image to read (colour channels, mip levels, etc...).
++ Later on, we will use these ImageViews when drawing to and presenting our images.
