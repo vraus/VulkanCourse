@@ -25,6 +25,7 @@ public:
 private:
     // Create functions
     void createInstance();
+    void createLogicalDevice();
 
     // Getters
     void getPhysicalDevice();
