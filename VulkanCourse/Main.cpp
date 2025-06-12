@@ -20,7 +20,7 @@ namespace
     {
         glfwInit();
 
-        // Set glfw to not work with an other graphic API other than Vulkan
+        // Set glfw to not work with another graphic API other than Vulkan
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
