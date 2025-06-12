@@ -43,6 +43,7 @@ private:
         VkPhysicalDevice physicalDevice;
         VkDevice logicalDevice;
     } mainDevice;
+    VkQueue graphicsQueue;
 
     // glfw Components
     GLFWwindow* window_;

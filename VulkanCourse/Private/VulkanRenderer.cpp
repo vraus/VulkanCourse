@@ -21,6 +21,7 @@ int VulkanRenderer::init(GLFWwindow* new_window)
 void VulkanRenderer::cleanup() const
 {
     vkDestroyInstance(instance_, nullptr);
+    vkDestroyDevice(mainDevice.logicalDevice, nullptr);
 }
 
 void VulkanRenderer::createInstance()
@@ -90,7 +91,11 @@ void VulkanRenderer::createLogicalDevice()
     // Create the logical device for the given physical device
     if (vkCreateDevice(mainDevice.physicalDevice, &deviceCreateInfo, nullptr, &mainDevice.logicalDevice) != VK_SUCCESS)
         throw std::runtime_error("failed to create logical device!");
-    
+
+    // Queues are created at the same time as the device...
+    // So we want handle to queues
+    // Given logical device of give queue family of givec queue index (here 0) place reference in given graphics queue handle
+    vkGetDeviceQueue(mainDevice.logicalDevice, indices.graphicsFamily, 0, &graphicsQueue);
 }
 
 void VulkanRenderer::getPhysicalDevice()
