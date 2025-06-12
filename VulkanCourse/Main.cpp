@@ -1,41 +1,48 @@
-// ReSharper disable CppClangTidyClangDiagnosticUnusedMacros
-
 // std
 #include <iostream>
+#include <stdexcept>
+#include <vector>
 
 // glfw
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-// glm
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/mat4x4.hpp>
+// src
+#include "Public/VulkanRenderer.h"
+
+// TODO: Anonymous Namespace will be then refactor into a VulkanWindow class and a VulkanApp class for clarity later
+namespace
+{
+    GLFWwindow* window;
+    VulkanRenderer vk_renderer;
+
+    static void init_window(const std::string& w_name = "Vulkan Course", const int width = 800, const int height = 600)
+    {
+        glfwInit();
+
+        // Set glfw to not work with an other graphic API other than Vulkan
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+        window = glfwCreateWindow(width, height, w_name.c_str(), nullptr, nullptr);
+    }
+}
 
 int main()
 {
-    glfwInit();
+    // Create our window
+    init_window();
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan Course", nullptr, nullptr);
-
-
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-    std::cout << "Extension count :" << extensionCount << "\n";
-
-    glm::mat4 testMatrix(1.0f);
-    glm::vec4 testVector(1.0f);
-
-    auto testResult = testMatrix * testVector;
+    // Create Renderer instance
+    if (vk_renderer.init(window) == EXIT_FAILURE)
+        return EXIT_FAILURE;
 
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
     }
 
+    // Destroy GLFW Window and stop GLFW
     glfwDestroyWindow(window);
     glfwTerminate();
 
