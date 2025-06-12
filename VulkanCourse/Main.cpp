@@ -14,9 +14,9 @@
 namespace
 {
     GLFWwindow* window;
-    VulkanRenderer vk_renderer;
+    VulkanRenderer vkRenderer;
 
-    static void init_window(const std::string& w_name = "Vulkan Course", const int width = 800, const int height = 600)
+    static void initWindow(const std::string& w_name = "Vulkan Course", const int width = 800, const int height = 600)
     {
         glfwInit();
 
@@ -26,15 +26,24 @@ namespace
 
         window = glfwCreateWindow(width, height, w_name.c_str(), nullptr, nullptr);
     }
+
+    static void shutdownApplication()
+    {
+        vkRenderer.cleanup();
+
+        // Destroy GLFW Window and stop GLFW
+        glfwDestroyWindow(window);
+        glfwTerminate();
+    }
 }
 
 int main()
 {
     // Create our window
-    init_window();
+    initWindow();
 
     // Create Renderer instance
-    if (vk_renderer.init(window) == EXIT_FAILURE)
+    if (vkRenderer.init(window) == EXIT_FAILURE)
         return EXIT_FAILURE;
 
     while (!glfwWindowShouldClose(window))
@@ -42,9 +51,7 @@ int main()
         glfwPollEvents();
     }
 
-    // Destroy GLFW Window and stop GLFW
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    shutdownApplication();
 
     return 0;
 }

@@ -326,6 +326,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Public\Utilites.h" />
     <ClInclude Include="Public\VulkanRenderer.h" />
     <ClInclude Include="Public\VulkanWindow.h" />
   </ItemGroup>
