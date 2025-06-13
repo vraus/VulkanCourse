@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <vector>
 #include <iostream>
+#include <set>
 
 // glfw
 #define GLFW_INCLUDE_VULKAN
@@ -26,25 +27,29 @@ private:
     // Create functions
     void createInstance();
     void createLogicalDevice();
+    void createSurface();
 
     // Getters
     void getPhysicalDevice();
-    QueueFamilyIndices getQueueFamilies(VkPhysicalDevice physicalDevice);
+    QueueFamilyIndices getQueueFamilies(VkPhysicalDevice physicalDevice) const;
     
     // Helpers
     bool checkPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice);
     bool checkInstanceExtensionSupport(std::vector<const char*>* checkExtensions);
+    bool checkDeviceExtensionSupport(VkPhysicalDevice physicalDevice);
 
 private:
     // Vulkan Components
-    VkInstance instance_;
+    VkInstance instance;
     struct
     {
         VkPhysicalDevice physicalDevice;
         VkDevice logicalDevice;
     } mainDevice;
     VkQueue graphicsQueue;
+    VkQueue presentQueue;
+    VkSurfaceKHR surface;
 
     // glfw Components
-    GLFWwindow* window_;
+    GLFWwindow* window;
 };
