@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <set>
+#include <algorithm>
 
 // glfw
 #define GLFW_INCLUDE_VULKAN
@@ -28,12 +29,12 @@ private:
     void createInstance();
     void createLogicalDevice();
     void createSurface();
-    void createSwapChain();
+    void createSwapchain();
 
     // Getters
     void getPhysicalDevice();
     QueueFamilyIndices getQueueFamilies(VkPhysicalDevice physicalDevice) const;
-    SwapChainSupportDetails getSwapChainDetails(VkPhysicalDevice physicalDevice) const;
+    SwapchainSupportDetails getSwapchainDetails(VkPhysicalDevice physicalDevice) const;
     
     // Helpers
     bool checkPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice);
@@ -42,6 +43,8 @@ private:
 
     // Choosers
     VkSurfaceFormatKHR chooseBestSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
+    VkPresentModeKHR chooseBestPresentMode(const std::vector<VkPresentModeKHR>& presentModes);
+    VkExtent2D chooseExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
 private:
     // Vulkan Components

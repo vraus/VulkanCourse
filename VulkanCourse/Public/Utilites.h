@@ -17,7 +17,7 @@ struct QueueFamilyIndices
     }
 };
 
-struct SwapChainSupportDetails
+struct SwapchainSupportDetails
 {
     VkSurfaceCapabilitiesKHR surfaceCapabilities;       // Surface properties (Image size / extent, etc...)
     std::vector<VkSurfaceFormatKHR> formats;            // List of the supported image formats (Format, image data representation, color space)

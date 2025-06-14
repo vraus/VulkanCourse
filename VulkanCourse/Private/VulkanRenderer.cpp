@@ -116,14 +116,42 @@ void VulkanRenderer::createSurface()
         throw std::runtime_error("failed to create window surface!");
 }
 
-void VulkanRenderer::createSwapChain()
+void VulkanRenderer::createSwapchain()
 {
     // Get swapchain details so we can pick the best settings
-    SwapChainSupportDetails swapChainSupport = getSwapChainDetails(mainDevice.physicalDevice);
+    SwapchainSupportDetails swapchainSupport = getSwapchainDetails(mainDevice.physicalDevice);
 
-    // 1. Choose the best surface format
-    // 2. Choose the best presentation mode
-    // 3. Choose the swapchain image resolution
+    // Find optimal surface values for our swapchain
+    VkSurfaceFormatKHR surfaceFormat = chooseBestSurfaceFormat(swapchainSupport.formats);
+    VkPresentModeKHR presentMode = chooseBestPresentMode(swapchainSupport.presentationModes);
+    VkExtent2D extent = chooseExtent(swapchainSupport.surfaceCapabilities);
+
+    // Make sur we have enough images in the swapchain to allow triple buffering
+    // While also making sur we are not going over the maximum
+    uint32_t swapchainImageCount = swapchainSupport.surfaceCapabilities.minImageCount + 1;
+    
+    // if == 0 then it means there is no maximum value
+    if (swapchainSupport.surfaceCapabilities.maxImageCount > 0 
+        && swapchainSupport.surfaceCapabilities.maxImageCount < swapchainImageCount)
+        swapchainImageCount = swapchainSupport.surfaceCapabilities.maxImageCount;
+
+    // Swapchain create info struct
+    VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
+    swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    swapchainCreateInfo.surface = surface;                                                      // Surface
+    swapchainCreateInfo.minImageCount = swapchainImageCount;                                    // Images in the swapchain
+    swapchainCreateInfo.imageFormat = surfaceFormat.format;                                     // Format
+    swapchainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;                             // Color Space
+    swapchainCreateInfo.imageExtent = extent;                                                   // Extent
+    swapchainCreateInfo.imageArrayLayers = 1;                                                   // Number of layers for each image in chain
+    swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;                       // What attachment images will be used as
+    swapchainCreateInfo.preTransform = swapchainSupport.surfaceCapabilities.currentTransform;   // Transform to perform on swapchain
+    swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;                     // How to handle blending images with external graphics (e.g. windows ...)
+    swapchainCreateInfo.presentMode = presentMode;                                              // Presentation Mode
+    swapchainCreateInfo.clipped = VK_TRUE;                                                      // Whether to clip parts of image not in view (e.g. overlapped or offscreen)
+    // TODO: Add the old swapchain when we redraw the surface e.g. window resize etc...
+
+    
 }
 
 void VulkanRenderer::getPhysicalDevice()
@@ -189,9 +217,9 @@ QueueFamilyIndices VulkanRenderer::getQueueFamilies(const VkPhysicalDevice physi
     return indices;
 }
 
-SwapChainSupportDetails VulkanRenderer::getSwapChainDetails(const VkPhysicalDevice physicalDevice) const
+SwapchainSupportDetails VulkanRenderer::getSwapchainDetails(const VkPhysicalDevice physicalDevice) const
 {
-    SwapChainSupportDetails details;
+    SwapchainSupportDetails details;
 
     // -- CAPABILITIES --
     // Get the surface capabilities for the given surface on the given physical device
@@ -239,7 +267,7 @@ bool VulkanRenderer::checkPhysicalDeviceSuitable(const VkPhysicalDevice physical
     
     if (extensionsSupported)
     {
-        SwapChainSupportDetails swapChainDetails = getSwapChainDetails(physicalDevice);
+        SwapchainSupportDetails swapChainDetails = getSwapchainDetails(physicalDevice);
         swapChainValid = !swapChainDetails.presentationModes.empty() && !swapChainDetails.formats.empty();
     }
     
@@ -320,6 +348,7 @@ VkSurfaceFormatKHR VulkanRenderer::chooseBestSurfaceFormat(const std::vector<VkS
     if (formats.size() == 1 && formats[0].format == VK_FORMAT_UNDEFINED)
         return { VK_FORMAT_R8G8B8A8_UNORM,  VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 
+    // If restricted find the optimal format
     for (const auto &format : formats)
     {
         if ((format.format == VK_FORMAT_R8G8B8A8_UNORM || format.format == VK_FORMAT_B8G8R8A8_UNORM) && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
@@ -327,4 +356,42 @@ VkSurfaceFormatKHR VulkanRenderer::chooseBestSurfaceFormat(const std::vector<VkS
     }
 
     return formats[0];
+}
+
+VkPresentModeKHR VulkanRenderer::chooseBestPresentMode(const std::vector<VkPresentModeKHR>& presentModes)
+{
+    // Look for mailbox presentation mode
+    for (const auto &presentMode : presentModes)
+    {
+        if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+            return presentMode;
+    }
+
+    return VK_PRESENT_MODE_FIFO_KHR; // This is a Vulkan specification, this present mode ALWAYS has to be available. Use it as a safe backup
+}
+
+VkExtent2D VulkanRenderer::chooseExtent(const VkSurfaceCapabilitiesKHR& capabilities)
+{
+    // If current extent is at numeric limits, then extent can vary. Otherwise it is the size of the window.
+    if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+        return capabilities.currentExtent;
+    else
+    {
+        // If value can vary, need to set manually
+
+        // Get window size
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        // Create new extent using window size
+        VkExtent2D extent = {};
+        extent.width = static_cast<uint32_t>(width);
+        extent.height = static_cast<uint32_t>(height);
+
+        // Surface also defines max and min so make sure within boundaries by clamping value
+        extent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, extent.width));
+        extent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, extent.height));
+
+        return extent;
+    }
 }
