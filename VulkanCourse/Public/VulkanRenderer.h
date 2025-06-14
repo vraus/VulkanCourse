@@ -57,6 +57,7 @@ private:
     VkQueue graphicsQueue;
     VkQueue presentQueue;
     VkSurfaceKHR surface;
+    VkSwapchainKHR swapchain;
 
     // glfw Components
     GLFWwindow* window;

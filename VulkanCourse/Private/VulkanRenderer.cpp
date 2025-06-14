@@ -10,6 +10,7 @@ int VulkanRenderer::init(GLFWwindow* new_window)
         createSurface();
         getPhysicalDevice();
         createLogicalDevice();
+        createSwapchain();
     } catch (const std::runtime_error &e)
     {
         std::cout << "ERROR:" << e.what() << '\n';
@@ -21,6 +22,7 @@ int VulkanRenderer::init(GLFWwindow* new_window)
 
 void VulkanRenderer::cleanup() const
 {
+    vkDestroySwapchainKHR(mainDevice.logicalDevice, swapchain, nullptr);
     vkDestroySurfaceKHR(instance, surface, nullptr);
     vkDestroyDevice(mainDevice.logicalDevice, nullptr);
     vkDestroyInstance(instance, nullptr);
@@ -149,9 +151,34 @@ void VulkanRenderer::createSwapchain()
     swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;                     // How to handle blending images with external graphics (e.g. windows ...)
     swapchainCreateInfo.presentMode = presentMode;                                              // Presentation Mode
     swapchainCreateInfo.clipped = VK_TRUE;                                                      // Whether to clip parts of image not in view (e.g. overlapped or offscreen)
-    // TODO: Add the old swapchain when we redraw the surface e.g. window resize etc...
 
-    
+    // Get Queue Family Indices
+    QueueFamilyIndices indices = getQueueFamilies(mainDevice.physicalDevice);
+
+    // If Graphics and Presentation families are different, the swapchain must let images be shared between families
+    if (indices.graphicsFamily != indices.presentFamily)
+    {
+        uint32_t queueFamilyIndices[] = {
+            static_cast<uint32_t>(indices.graphicsFamily),
+            static_cast<uint32_t>(indices.presentFamily),
+        };
+
+        swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;              // Image share handling
+        swapchainCreateInfo.queueFamilyIndexCount = 2;                                  // Number of queues to share images between
+        swapchainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;                   // Array of queues to share between
+    }
+    else
+    {
+        swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;               // Images are exclusive to a single queue
+        swapchainCreateInfo.queueFamilyIndexCount = 0;
+        swapchainCreateInfo.pQueueFamilyIndices = nullptr;
+    }
+
+    // This is null for now, but when we resize the window we destroy the old swapchain and pass the old to the new
+    swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
+
+    if (vkCreateSwapchainKHR(mainDevice.logicalDevice, &swapchainCreateInfo, nullptr, &swapchain) != VK_SUCCESS)
+        throw std::runtime_error("failed to create a Swapchain!");
 }
 
 void VulkanRenderer::getPhysicalDevice()
