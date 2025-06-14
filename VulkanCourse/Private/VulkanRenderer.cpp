@@ -79,7 +79,7 @@ void VulkanRenderer::createLogicalDevice()
     {
         VkDeviceQueueCreateInfo queueCreateInfo = {};
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queuFamilyIndex;  // The index of the family to create a queue from
+        queueCreateInfo.queueFamilyIndex = queuFamilyIndex;         // The index of the family to create a queue from
         queueCreateInfo.queueCount = 1;                             // The number of queue to create
         queueCreateInfo.pQueuePriorities = &priority;               // Vulkan needs to know how to prioritize all the queues
 
@@ -179,6 +179,37 @@ QueueFamilyIndices VulkanRenderer::getQueueFamilies(const VkPhysicalDevice physi
     return indices;
 }
 
+SwapChainSupportDetails VulkanRenderer::getSwapChainDetails(const VkPhysicalDevice physicalDevice) const
+{
+    SwapChainSupportDetails details;
+
+    // -- CAPABILITIES --
+    // Get the surface capabilities for the given surface on the given physical device
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.surfaceCapabilities);
+    
+    // -- FORMATS --
+    uint32_t formatCount;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
+
+    if (formatCount != 0)
+    {
+        details.formats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, details.formats.data());   
+    }
+
+    // -- PRESENTATION MODES -- 
+    uint32_t presentModeCount;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
+
+    if (presentModeCount != 0)
+    {
+        details.presentationModes.resize(presentModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, details.presentationModes.data());
+    }
+    
+    return details;
+}
+
 bool VulkanRenderer::checkPhysicalDeviceSuitable(const VkPhysicalDevice physicalDevice)
 {
     /* Commented for now. We will check properties and features later
@@ -191,16 +222,21 @@ bool VulkanRenderer::checkPhysicalDeviceSuitable(const VkPhysicalDevice physical
     vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
      */
 
-    // Check if queues are supported
-
     QueueFamilyIndices indices = getQueueFamilies(physicalDevice);
-
     bool extensionsSupported = checkDeviceExtensionSupport(physicalDevice);
+
+    bool swapChainValid = false;
     
-    return indices.isValid() && extensionsSupported;
+    if (extensionsSupported)
+    {
+        SwapChainSupportDetails swapChainDetails = getSwapChainDetails(physicalDevice);
+        swapChainValid = !swapChainDetails.presentationModes.empty() && !swapChainDetails.formats.empty();
+    }
+    
+    return indices.isValid() && extensionsSupported && swapChainValid;
 }
 
-bool VulkanRenderer::checkInstanceExtensionSupport(std::vector<const char*>* checkExtensions)
+bool VulkanRenderer::checkInstanceExtensionSupport(const std::vector<const char*>* checkExtensions)
 {
     // Need to get number of extensions to create array of correct size to hold extensions
     uint32_t glfwExtensionCount = 0;

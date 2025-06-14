@@ -32,10 +32,11 @@ private:
     // Getters
     void getPhysicalDevice();
     QueueFamilyIndices getQueueFamilies(VkPhysicalDevice physicalDevice) const;
+    SwapChainSupportDetails getSwapChainDetails(VkPhysicalDevice physicalDevice) const;
     
     // Helpers
     bool checkPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice);
-    bool checkInstanceExtensionSupport(std::vector<const char*>* checkExtensions);
+    bool checkInstanceExtensionSupport(const std::vector<const char*>* checkExtensions);
     bool checkDeviceExtensionSupport(VkPhysicalDevice physicalDevice);
 
 private:
