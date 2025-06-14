@@ -28,6 +28,7 @@ private:
     void createInstance();
     void createLogicalDevice();
     void createSurface();
+    void createSwapChain();
 
     // Getters
     void getPhysicalDevice();
@@ -38,6 +39,9 @@ private:
     bool checkPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice);
     bool checkInstanceExtensionSupport(const std::vector<const char*>* checkExtensions);
     bool checkDeviceExtensionSupport(VkPhysicalDevice physicalDevice);
+
+    // Choosers
+    VkSurfaceFormatKHR chooseBestSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
 
 private:
     // Vulkan Components

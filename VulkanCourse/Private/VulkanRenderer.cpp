@@ -116,6 +116,16 @@ void VulkanRenderer::createSurface()
         throw std::runtime_error("failed to create window surface!");
 }
 
+void VulkanRenderer::createSwapChain()
+{
+    // Get swapchain details so we can pick the best settings
+    SwapChainSupportDetails swapChainSupport = getSwapChainDetails(mainDevice.physicalDevice);
+
+    // 1. Choose the best surface format
+    // 2. Choose the best presentation mode
+    // 3. Choose the swapchain image resolution
+}
+
 void VulkanRenderer::getPhysicalDevice()
 {
     // Enumerate Physical Devices the vkInstance can access
@@ -299,4 +309,22 @@ bool VulkanRenderer::checkDeviceExtensionSupport(const VkPhysicalDevice physical
     }
     
     return true;
+}
+
+/// Best format is subjective but ours will be:
+/// - Format: VK_FORMAT_R8G8B8A8_UNORM (|| VK_FORMAT_B8G8R8A8_UNORM)
+/// - ColorSpace (range of colors): VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
+VkSurfaceFormatKHR VulkanRenderer::chooseBestSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)
+{
+    // If this is true then ALL the formats are available
+    if (formats.size() == 1 && formats[0].format == VK_FORMAT_UNDEFINED)
+        return { VK_FORMAT_R8G8B8A8_UNORM,  VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+
+    for (const auto &format : formats)
+    {
+        if ((format.format == VK_FORMAT_R8G8B8A8_UNORM || format.format == VK_FORMAT_B8G8R8A8_UNORM) && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+            return format;
+    }
+
+    return formats[0];
 }
