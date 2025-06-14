@@ -176,3 +176,48 @@ The project needs the following to be installed in order to work properly:
 + An "ImageView" type can be created to interface with an image.
 + An ImageView simply describes how to read an image (e.g. 2D or 3D addresses, format, etc...) and what part of the image to read (colour channels, mip levels, etc...).
 + Later on, we will use these ImageViews when drawing to and presenting our images.
+
+## Color Spaces
+
+> [Video](https://www.youtube.com/watch?v=99v96TL-tuY)
+
+### What is a Color Space?
+
++ A color space defines **how color values (e.g. RGB)** should be interpreted to produce visible color.
++ Two images with the same RGB values can appear different if they use different color spaces.
++ It's a **mapping** from color values to human-visible colors.
++ Common color spaces include:
+    + **sRGB** – Standard RGB, commonly used in monitors and web content.
+    + **Linear** – Color values are stored in linear space, better for lighting calculations.
+    + **Adobe RGB**, **Rec.709**, **Rec.2020**, etc. – Used in photography, video, and HDR.
+
+### Why Does It Matter in Vulkan?
+
++ Vulkan separates the **color format** (e.g. `VK_FORMAT_B8G8R8A8_SRGB`) from the **color space** (e.g. `VK_COLOR_SPACE_SRGB_NONLINEAR_KHR`).
++ The swapchain format describes **how images are stored**, while the color space tells Vulkan **how to interpret them** when presenting.
+
+### Color Space in the Swapchain
+
++ When choosing a **surface format** for the swapchain, Vulkan will return a list of supported `(format, colorSpace)` pairs.
++ You must pick one that matches both your intended image format and the display's expected color space.
++ Most common and default option is:
+    + `VK_FORMAT_B8G8R8A8_SRGB` + `VK_COLOR_SPACE_SRGB_NONLINEAR_KHR`
+    + This means: use **8-bit SRGB** and apply **sRGB gamma correction** automatically when presenting.
+
+### Linear vs Nonlinear
+
++ **Linear space**:
+    + Color values are proportional to actual light intensity.
+    + Ideal for lighting and blending operations in shaders.
++ **Nonlinear space**:
+    + Human vision is more sensitive to dark tones than bright ones.
+    + sRGB applies a nonlinear curve (gamma) to store more detail in darker areas.
++ Vulkan allows you to **write shaders in linear space** and let the GPU **convert to nonlinear sRGB** during presentation.
+
+### Practical Advice
+
++ Always check the list of supported surface formats and pick one that matches your needs.
++ If you want to perform accurate lighting in shaders, use **linear color in shaders**, then output to an **sRGB framebuffer**.
++ Avoid mismatching format and color space:
+    + Using `VK_FORMAT_R8G8B8A8_UNORM` with `VK_COLOR_SPACE_SRGB_NONLINEAR_KHR` may produce incorrect output.
+
