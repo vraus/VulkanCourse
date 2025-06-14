@@ -25,11 +25,14 @@ public:
 
 // Vulkan Functions
 private:
-    // Create functions
+    // Create Once functions
     void createInstance();
     void createLogicalDevice();
     void createSurface();
     void createSwapchain();
+
+    // Creat Utilities functions
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
     // Getters
     void getPhysicalDevice();

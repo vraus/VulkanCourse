@@ -22,6 +22,10 @@ int VulkanRenderer::init(GLFWwindow* new_window)
 
 void VulkanRenderer::cleanup() const
 {
+    // Destroy all the created image views
+    for (const auto image : swapchainImages)
+        vkDestroyImageView(mainDevice.logicalDevice, image.imageView, nullptr);
+    
     vkDestroySwapchainKHR(mainDevice.logicalDevice, swapchain, nullptr);
     vkDestroySurfaceKHR(instance, surface, nullptr);
     vkDestroyDevice(mainDevice.logicalDevice, nullptr);
@@ -196,9 +200,39 @@ void VulkanRenderer::createSwapchain()
         // Store image handle
         SwapchainImage swapchainImage = {};
         swapchainImage.image = image;
+        swapchainImage.imageView = createImageView(image, swapchainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        // Create image view
+        // Add to swapchain image list
+        swapchainImages.push_back(swapchainImage);
     }
+}
+
+VkImageView VulkanRenderer::createImageView(const VkImage image, const VkFormat format, VkImageAspectFlags aspectFlags)
+{
+    VkImageViewCreateInfo viewCreateInfo = {};
+    viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewCreateInfo.image = image;                                           // Image to create a view for
+    viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;                        // The type of image we're working with
+    viewCreateInfo.format = format;                                         // Format image data
+    viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;            // Allows remapping of RGBA components to other RGBA values
+    viewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;            // Allows remapping of RGBA components to other RGBA values
+    viewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;            // Allows remapping of RGBA components to other RGBA values
+    viewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;            // Allows remapping of RGBA components to other RGBA values
+
+    // Subresources allow the view to view only a part of an image
+    viewCreateInfo.subresourceRange.aspectMask = aspectFlags;               // Which aspect of image to view (e.g. Color, depth, etc...). Here COLOR_BIT
+    viewCreateInfo.subresourceRange.baseMipLevel = 0;                       // Start mipmap level to view from
+    viewCreateInfo.subresourceRange.levelCount = 1;                         // Number of mipmap levels to view (here only one, the first one).
+    viewCreateInfo.subresourceRange.baseArrayLayer = 0;                     // Start array level to view from
+    viewCreateInfo.subresourceRange.layerCount = 1;                         // Number of array levels to view
+
+    // Create image view and return it
+    VkImageView imageView;
+
+    if (vkCreateImageView(mainDevice.logicalDevice, &viewCreateInfo, nullptr, &imageView) != VK_SUCCESS)
+        throw std::runtime_error("failed to create Image View");
+
+    return imageView;    
 }
 
 void VulkanRenderer::getPhysicalDevice()
