@@ -49,15 +49,24 @@ private:
 private:
     // Vulkan Components
     VkInstance instance;
+    
     struct
     {
         VkPhysicalDevice physicalDevice;
         VkDevice logicalDevice;
     } mainDevice;
+
     VkQueue graphicsQueue;
     VkQueue presentQueue;
+
     VkSurfaceKHR surface;
+    
     VkSwapchainKHR swapchain;
+    std::vector<SwapchainImage> swapchainImages;
+
+    // Vulkan Utilities
+    VkFormat swapchainImageFormat;
+    VkExtent2D swapchainExtent;
 
     // glfw Components
     GLFWwindow* window;

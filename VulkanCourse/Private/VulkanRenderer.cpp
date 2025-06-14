@@ -130,18 +130,18 @@ void VulkanRenderer::createSwapchain()
 
     // Make sur we have enough images in the swapchain to allow triple buffering
     // While also making sur we are not going over the maximum
-    uint32_t swapchainImageCount = swapchainSupport.surfaceCapabilities.minImageCount + 1;
+    uint32_t swapchainMinImageCount = swapchainSupport.surfaceCapabilities.minImageCount + 1;
     
     // if == 0 then it means there is no maximum value
     if (swapchainSupport.surfaceCapabilities.maxImageCount > 0 
-        && swapchainSupport.surfaceCapabilities.maxImageCount < swapchainImageCount)
-        swapchainImageCount = swapchainSupport.surfaceCapabilities.maxImageCount;
+        && swapchainSupport.surfaceCapabilities.maxImageCount < swapchainMinImageCount)
+        swapchainMinImageCount = swapchainSupport.surfaceCapabilities.maxImageCount;
 
     // Swapchain create info struct
     VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
     swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     swapchainCreateInfo.surface = surface;                                                      // Surface
-    swapchainCreateInfo.minImageCount = swapchainImageCount;                                    // Images in the swapchain
+    swapchainCreateInfo.minImageCount = swapchainMinImageCount;                                    // Images in the swapchain
     swapchainCreateInfo.imageFormat = surfaceFormat.format;                                     // Format
     swapchainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;                             // Color Space
     swapchainCreateInfo.imageExtent = extent;                                                   // Extent
@@ -179,6 +179,26 @@ void VulkanRenderer::createSwapchain()
 
     if (vkCreateSwapchainKHR(mainDevice.logicalDevice, &swapchainCreateInfo, nullptr, &swapchain) != VK_SUCCESS)
         throw std::runtime_error("failed to create a Swapchain!");
+
+    // Saving those values for later use (e.g. ImageViews)
+    swapchainImageFormat = surfaceFormat.format;
+    swapchainExtent = extent;
+
+    // Get Swapchain images
+    uint32_t swapchainImageCount;
+    vkGetSwapchainImagesKHR(mainDevice.logicalDevice, swapchain, &swapchainImageCount, nullptr);
+
+    std::vector<VkImage> images(swapchainImageCount);
+    vkGetSwapchainImagesKHR(mainDevice.logicalDevice, swapchain, &swapchainImageCount, images.data());
+
+    for (const auto image : images)
+    {
+        // Store image handle
+        SwapchainImage swapchainImage = {};
+        swapchainImage.image = image;
+
+        // Create image view
+    }
 }
 
 void VulkanRenderer::getPhysicalDevice()

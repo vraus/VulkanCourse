@@ -23,3 +23,9 @@ struct SwapchainSupportDetails
     std::vector<VkSurfaceFormatKHR> formats;            // List of the supported image formats (Format, image data representation, color space)
     std::vector<VkPresentModeKHR> presentationModes;    // How images should be presented to screen
 };
+
+struct SwapchainImage
+{
+    VkImage image;
+    VkImageView imageView;
+};
