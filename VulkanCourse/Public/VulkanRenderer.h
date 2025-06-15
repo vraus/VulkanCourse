@@ -30,10 +30,12 @@ private:
     void createLogicalDevice();
     void createSurface();
     void createSwapchain();
+    void createGraphicsPipeline();
 
     // Creat Utilities functions
-    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
-
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) const;
+    VkShaderModule createShaderModule(const std::vector<char>& code) const;
+    
     // Getters
     void getPhysicalDevice();
     QueueFamilyIndices getQueueFamilies(VkPhysicalDevice physicalDevice) const;

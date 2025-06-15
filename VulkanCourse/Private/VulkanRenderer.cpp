@@ -11,6 +11,7 @@ int VulkanRenderer::init(GLFWwindow* new_window)
         getPhysicalDevice();
         createLogicalDevice();
         createSwapchain();
+        createGraphicsPipeline();
     } catch (const std::runtime_error &e)
     {
         std::cout << "ERROR:" << e.what() << '\n';
@@ -207,7 +208,43 @@ void VulkanRenderer::createSwapchain()
     }
 }
 
-VkImageView VulkanRenderer::createImageView(const VkImage image, const VkFormat format, VkImageAspectFlags aspectFlags)
+void VulkanRenderer::createGraphicsPipeline()
+{
+    // Read in SPIR-V code of shaders
+    auto vertexShaderCode = readFile("Shaders/vert.spv");
+    auto fragmentShaderCode = readFile("Shaders/frag.spv");
+
+    // Build Shader Modules to link to Graphics Pipeline
+    VkShaderModule vertexShaderModule = createShaderModule(vertexShaderCode);
+    VkShaderModule fragmentShaderModule = createShaderModule(fragmentShaderCode);
+
+    // Shader Stage Creation Information
+    // Vertex Stage
+    VkPipelineShaderStageCreateInfo vertexCreateInfo = {};
+    vertexCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertexCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;    // Shader stage name
+    vertexCreateInfo.module = vertexShaderModule;           // Shader module to be used by stage
+    vertexCreateInfo.pName = "main";                        // Name of the function to run first. Entry point into the shader
+    
+    // Fragment Stage
+    VkPipelineShaderStageCreateInfo fragmentCreateInfo = {};
+    fragmentCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragmentCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    fragmentCreateInfo.module = fragmentShaderModule;
+    fragmentCreateInfo.pName = "main";
+
+    // Put shader stage creation info into array
+    // Graphics Pipeline creation info requires array of shader stage creates
+    VkPipelineShaderStageCreateInfo shaderStages[] = { vertexCreateInfo, fragmentCreateInfo };
+    
+    // Create Pipeline
+    
+    // Destroy Shader Modules, no longer needed after Pipeline created
+    vkDestroyShaderModule(mainDevice.logicalDevice, fragmentShaderModule, nullptr); 
+    vkDestroyShaderModule(mainDevice.logicalDevice, vertexShaderModule, nullptr);
+}
+
+VkImageView VulkanRenderer::createImageView(const VkImage image, const VkFormat format, VkImageAspectFlags aspectFlags) const
 {
     VkImageViewCreateInfo viewCreateInfo = {};
     viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -233,6 +270,21 @@ VkImageView VulkanRenderer::createImageView(const VkImage image, const VkFormat 
         throw std::runtime_error("failed to create Image View");
 
     return imageView;    
+}
+
+VkShaderModule VulkanRenderer::createShaderModule(const std::vector<char>& code) const
+{
+    VkShaderModuleCreateInfo shaderModuleCreateInfo = {};
+    shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    shaderModuleCreateInfo.codeSize = code.size();
+    shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t *>(code.data()); // Correspond to a point cast
+
+    VkShaderModule shaderModule;
+
+    if (vkCreateShaderModule(mainDevice.logicalDevice, &shaderModuleCreateInfo, nullptr, &shaderModule) != VK_SUCCESS)
+        throw std::runtime_error("Failed to create the Shader Module !");
+
+    return shaderModule;
 }
 
 void VulkanRenderer::getPhysicalDevice()
